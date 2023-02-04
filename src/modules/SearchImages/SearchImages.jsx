@@ -48,7 +48,7 @@ const SearchImages = () => {
       }
     };
     fetchImages();
-  }, [search, page, setLoading, getImages, setItems, setError]);
+  }, [search, page, setLoading, setItems, setError]);
 
   const imagesSearch = ({ search }) => {
     setSearch(search);
