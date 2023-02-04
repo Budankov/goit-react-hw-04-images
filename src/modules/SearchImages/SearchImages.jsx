@@ -1,6 +1,6 @@
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 
 import Modal from 'shared/components/Modal/Modal';
 import Searchbar from './Searchbar/Searchbar';
@@ -12,96 +12,80 @@ import { getImages } from '../../shared/services/pixabey-api';
 
 import './search-images.module.scss';
 
-class SearchImages extends Component {
-  state = {
-    search: '',
-    items: [],
-    loading: false,
-    error: null,
-    page: 1,
-    totalHits: 0,
-    showModal: false,
-    imageModal: null,
-  };
+const SearchImages = () => {
+  const [search, setSearch] = useState('');
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalHits, setTotalHits] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+  const [imageModal, setImageModal] = useState(null);
 
-  componentDidUpdate(prevProps, prevState) {
-    const { search, page } = this.state;
-    if (prevState.search !== search || prevState.page !== page) {
-      this.fetchImages();
+  useEffect(() => {
+    if (!search) {
+      return;
     }
-  }
 
-  async fetchImages() {
-    try {
-      this.setState({ loading: true });
-      const { search, page } = this.state;
-      const data = await getImages(search, page);
-      const { hits, totalHits } = data;
-      if (hits.length <= 0) {
-        Notify.warning(
-          'Sorry, there are no images matching your search query. Please try again.'
-        );
-        return;
+    const fetchImages = async () => {
+      try {
+        setLoading(true);
+        const data = await getImages(search, page);
+        const { hits, totalHits } = data;
+        setTotalHits(totalHits);
+        if (hits.length <= 0) {
+          Notify.warning(
+            'Sorry, there are no images matching your search query. Please try again.'
+          );
+          return;
+        }
+        Notify.success(`Hooray! We found ${totalHits} images.`);
+        setItems(prevState => [...prevState, ...hits]);
+      } catch (error) {
+        setError(error.massage);
+      } finally {
+        setLoading(false);
       }
-      Notify.success(`Hooray! We found ${totalHits} images.`);
-      this.setState(({ items }) => ({
-        items: [...items, ...hits],
-        totalHits,
-      }));
-    } catch (error) {
-      this.state({ error: error.massage });
-    } finally {
-      this.setState({ loading: false });
-    }
-  }
+    };
+    fetchImages();
+  }, [search, page, setLoading, getImages, setItems, setError]);
 
-  imagesSearch = ({ search }) => {
-    this.setState({ search, items: [], page: 1 });
+  const imagesSearch = ({ search }) => {
+    setSearch(search);
+    setItems([]);
+    setPage(1);
   };
 
-  loadMore = () => {
-    this.setState(({ page }) => ({ page: page + 1 }));
+  const loadMore = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  showImageModal = ({ largeImageURL, tags }) => {
-    this.setState({
-      imageModal: {
-        largeImageURL,
-        tags,
-      },
-      showModal: true,
-    });
+  const showImageModal = data => {
+    setImageModal(data);
+    setShowModal(true);
   };
 
-  closeModal = () => {
-    this.setState({
-      showModal: false,
-      imageModal: null,
-    });
+  const closeModal = () => {
+    setShowModal(false);
+    setImageModal(null);
   };
 
-  render() {
-    const { items, loading, error, totalHits, showModal, imageModal } =
-      this.state;
-    const { imagesSearch, loadMore, showImageModal, closeModal } = this;
-
-    return (
-      <>
-        <Searchbar onSubmit={imagesSearch} />
-        <ImageGallery items={items} showImageModal={showImageModal} />
-        {error && <p>{error.massage}</p>}
-        {loading && <Loader />}
-        {items.length > 0 && items.length < totalHits && (
-          <Button loadMore={loadMore}>Load more</Button>
-        )}
-        {showModal && (
-          <Modal closeModal={closeModal}>
-            <ImageModal {...imageModal} />
-          </Modal>
-        )}
-      </>
-    );
-  }
-}
+  return (
+    <>
+      <Searchbar onSubmit={imagesSearch} />
+      <ImageGallery items={items} showImageModal={showImageModal} />
+      {error && <p>{error.massage}</p>}
+      {loading && <Loader />}
+      {items.length > 0 && items.length < totalHits && (
+        <Button loadMore={loadMore}>Load more</Button>
+      )}
+      {showModal && (
+        <Modal closeModal={closeModal}>
+          <ImageModal {...imageModal} />
+        </Modal>
+      )}
+    </>
+  );
+};
 
 export default SearchImages;
