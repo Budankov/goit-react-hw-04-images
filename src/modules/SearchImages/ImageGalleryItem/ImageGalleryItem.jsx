@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 import PropTypes from 'prop-types';
 
 import styles from './image-gallery-item.module.scss';
@@ -18,7 +20,7 @@ const ImageGalleryItem = ({ items, showImageModal }) => {
   ));
 };
 
-export default ImageGalleryItem;
+export default memo(ImageGalleryItem);
 
 ImageGalleryItem.defaultProps = {
   items: [],

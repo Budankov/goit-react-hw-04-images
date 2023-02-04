@@ -1,6 +1,6 @@
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import Modal from 'shared/components/Modal/Modal';
 import Searchbar from './Searchbar/Searchbar';
@@ -50,25 +50,25 @@ const SearchImages = () => {
     fetchImages();
   }, [search, page, setLoading, setItems, setError]);
 
-  const imagesSearch = ({ search }) => {
+  const imagesSearch = useCallback(({ search }) => {
     setSearch(search);
     setItems([]);
     setPage(1);
-  };
+  }, []);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     setPage(prevPage => prevPage + 1);
-  };
+  }, []);
 
-  const showImageModal = data => {
+  const showImageModal = useCallback(data => {
     setImageModal(data);
     setShowModal(true);
-  };
+  }, []);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setShowModal(false);
     setImageModal(null);
-  };
+  }, []);
 
   return (
     <>
